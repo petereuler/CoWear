@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "CoWear: Towards Collaborative Wearable Inertial Localization with Multiple Smart Devices"
+message: "Please cite the CoWear dataset paper and the software release."
+type: software
+authors:
+  - family-names: "CoWear"
+    given-names: "Authors"
+version: "1.0.0"
+date-released: 2026-10-04
+url: https://huggingface.co/datasets/zyshe/CoWear
+license: Apache-2.0

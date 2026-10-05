@@ -1,0 +1,12 @@
+dataset_version = "CoWear-3device-363-v1"
+protocol_version = "paper-v1"
+sample_rate_hz = 100.0
+seed = 2027
+target_role = "phone"
+input_features = 6
+hidden_size = 128
+batch_size = 1024
+max_epochs = 100
+optimizer = "AdamW"
+event_segmentation = "joint_vertical_gyro_consensus"
+metric = "median per-session horizontal ATE"

@@ -1,0 +1,39 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Local data, caches, checkpoints, and generated runs
+data/
+cache/
+CoWear/
+docs/
+paper/
+results/
+private/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npz
+*.xml
+
+# LaTeX build byproducts retained only in the internal manuscript workspace.
+*.aux
+*.bbl
+*.blg
+*.log
+
+# Temporary release staging
+release_staging/
+dist/
+build/
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/

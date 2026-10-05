@@ -1,0 +1,10 @@
+CoWear reproduction code is released under the Apache License, Version 2.0.
+
+The public baseline implementations include a minimal 1-D ResNet component
+adapted from the TLIO project and the torchvision ResNet implementation. See
+the corresponding upstream project licenses before redistributing modified
+third-party components.
+
+The CoWear sensor data are not covered by this code license. Data access and
+data-use terms are defined by the Hugging Face dataset card:
+https://huggingface.co/datasets/zyshe/CoWear
