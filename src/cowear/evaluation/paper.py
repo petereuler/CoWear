@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Re-evaluate CoWear trajectories with one median per-session ATE protocol.
+"""Evaluate the frozen CoWear protocol with one per-session ATE definition.
 
-This script never trains a model.  It reuses the published Task-1 trajectory
-artifacts for PDR/RIDI/RoNIN/TLIO, runs inference from the existing CoWear
-LSTM self/common-target checkpoints, and writes auditable per-session metrics.
+This script runs inference from published CoWear LSTM checkpoints.  For the
+external baseline rows, a Release may provide either raw internal trajectory
+artifacts or the published per-session ATE table.  The latter is the public
+asset contract: it reproduces numerical tables without distributing tracks.
 """
 
 from __future__ import annotations
@@ -145,6 +146,54 @@ def trajectory_ate(path: Path) -> tuple[float, int]:
     if truth.ndim != 2 or truth.shape != prediction.shape or truth.shape[1] < 2:
         raise ValueError(f"trajectory arrays must have at least two coordinates: {path}")
     return horizontal_ate(prediction, truth), count
+
+
+def released_external_metrics(path: Path) -> list[dict]:
+    """Read the public baseline metric artifact without exposing trajectories."""
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    required = {
+        "task", "method", "target", "estimator", "base_id", "ate_m",
+        "trajectory_points", "segments",
+    }
+    if not rows or required.difference(rows[0]):
+        raise ValueError(f"Invalid published baseline metrics: {path}")
+    expected = []
+    for method in ("PDR", "RIDI", "RoNIN", "TLIO"):
+        for role in ROLES:
+            label = ROLE_LABEL[role]
+            expected.append(("task1_self", method, label, label))
+        expected.append(("benchmark_fusion", method, "Phone", "self_checkpoint_uniform"))
+    selected: list[dict] = []
+    for task, method, target, estimator in expected:
+        subset = [
+            row for row in rows
+            if (row["task"], row["method"], row["target"], row["estimator"])
+            == (task, method, target, estimator)
+        ]
+        ids = [row["base_id"] for row in subset]
+        if len(subset) != 115 or len(set(ids)) != 115:
+            raise ValueError(
+                f"Published baseline metrics require 115 unique sessions for "
+                f"{task}/{method}/{target}/{estimator}; found {len(subset)} rows "
+                f"and {len(set(ids))} unique sessions"
+            )
+        for row in subset:
+            selected.append(
+                {
+                    "task": task,
+                    "method": method,
+                    "target": target,
+                    "estimator": estimator,
+                    "base_id": row["base_id"],
+                    "ate_m": float(row["ate_m"]),
+                    "trajectory_points": int(row["trajectory_points"]),
+                    "segments": int(row["segments"]),
+                }
+            )
+    return selected
 
 
 def contiguous_segments(keys: list[tuple[str, int, int]]) -> list[list[tuple[str, int, int]]]:
@@ -392,6 +441,12 @@ def summarize_rows(rows: list[dict]) -> list[dict]:
 
 
 def external_task1_and_fusion(args, per_session_rows: list[dict]) -> None:
+    released_metrics = args.weights_root / "metrics" / "per_session_ate.csv"
+    if released_metrics.is_file():
+        per_session_rows.extend(released_external_metrics(released_metrics))
+        print(f"[paper-eval] external baselines loaded from {released_metrics}", flush=True)
+        return
+
     task1_roots = {
         "PDR": {
             role: args.benchmark_root / "pdr_peak_trough" / "trajectories" / "self" / role

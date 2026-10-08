@@ -20,7 +20,7 @@ from cowear.protocol.geometry import (
 )
 from cowear.protocol.checkpoints import read_checkpoint
 from cowear.models.cowear_lstm import CoWearLSTM
-from cowear.evaluation.paper import trajectory_ate
+from cowear.evaluation.paper import released_external_metrics, trajectory_ate
 from cowear.baselines import BASELINES, get_baseline
 
 
@@ -55,6 +55,34 @@ class TestContracts(unittest.TestCase):
             score, points = trajectory_ate(path)
             self.assertEqual(points, 2)
             self.assertAlmostEqual(score, np.sqrt(12.5))
+
+    def test_released_external_metrics_require_complete_unique_sessions(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "per_session_ate.csv"
+            fields = [
+                "task", "method", "target", "estimator", "base_id", "ate_m",
+                "trajectory_points", "segments",
+            ]
+            with path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields)
+                writer.writeheader()
+                for method in ("PDR", "RIDI", "RoNIN", "TLIO"):
+                    for target in ("Phone", "Watch", "Glasses"):
+                        for index in range(115):
+                            writer.writerow({
+                                "task": "task1_self", "method": method,
+                                "target": target, "estimator": target,
+                                "base_id": f"test/{index}", "ate_m": "1.0",
+                                "trajectory_points": "2", "segments": "1",
+                            })
+                    for index in range(115):
+                        writer.writerow({
+                            "task": "benchmark_fusion", "method": method,
+                            "target": "Phone", "estimator": "self_checkpoint_uniform",
+                            "base_id": f"test/{index}", "ate_m": "1.0",
+                            "trajectory_points": "2", "segments": "1",
+                        })
+            self.assertEqual(len(released_external_metrics(path)), 16 * 115)
 
 
     def test_manifest_split_is_frozen(self) -> None:

@@ -52,6 +52,10 @@ python -m cowear evaluate \
 
 Evaluation produces numerical CSV and JSON metrics only.
 
+For published-weight evaluation, extract all three `v1.0.1` Release archives
+into the same `--weights-root`. This supplies the CoWear checkpoints, baseline
+parameters, and published per-session baseline metrics required by the command.
+
 ## Layout
 
 ```text

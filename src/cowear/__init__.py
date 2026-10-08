@@ -1,6 +1,6 @@
 """Auditable CoWear paper reproduction package."""
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 DATASET_URL = "https://huggingface.co/datasets/zyshe/CoWear"
 DATASET_VERSION = "CoWear-3device-363-v1"
 PROTOCOL_VERSION = "paper-v1"
